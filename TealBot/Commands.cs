@@ -16,10 +16,10 @@ public class Commands : InteractionModuleBase<SocketInteractionContext>
     {
         _logger = logger;
         tbaClient = SetupClient(uri: "https://www.thebluealliance.com/", config["Secrets:TBA"]);
-        statClient = SetupClient(uri: "https://api.statbotics.io/", config["Secrets:TBA"]);
+        statClient = SetupClient(uri: "https://api.statbotics.io/");
     }
 
-    private static HttpClient SetupClient(string uri, string TBA)
+    private static HttpClient SetupClient(string uri, string TBA="")
     {
         HttpClient client = new();
         client.BaseAddress = new Uri(uri);
