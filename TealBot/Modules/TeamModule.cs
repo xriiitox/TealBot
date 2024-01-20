@@ -1,25 +1,19 @@
 // Possible TODO: make teamevents have a selectmenu to select an event to view data of
 // TODO: Statbotics.io api for match data
 using TealBot.Objects;
+using ILogger = Serilog.ILogger;
 
 namespace TealBot.Modules;
 
 [Group("team", "Team-specific commands")]
-public class TeamModule : InteractionModuleBase<SocketInteractionContext>
+public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFactory) : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly ILogger<TeamModule> _logger;
-    private readonly IHttpClientFactory _clientFactory;
+    private readonly ILogger<TeamModule> _logger = logger;
 
-    public TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFactory)
-    {
-        _logger = logger;
-        _clientFactory = clientFactory;
-    }
-    
-    [SlashCommand("get", "Returns data about the requested team.")]
+    [SlashCommand("get", "Returns data about the requested team.", ignoreGroupNames: true)]
     public async Task TeamCommand([Summary("TeamNumber", "The team that you want data of.")] int teamID)
     {
-        HttpClient tbaClient = _clientFactory.CreateClient("TBA");
+        HttpClient tbaClient = clientFactory.CreateClient("TBA");
 
         var response = await tbaClient.GetAsync($"api/v3/team/frc{teamID}/simple");
 
@@ -49,7 +43,7 @@ public class TeamModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("robots", "Returns data about the requested team's robots.")]
     public async Task TeamRobotsCommand([Summary("TeamNumber", "The team that you want data of.")] int teamID)
     {
-        var tbaClient = _clientFactory.CreateClient("TBA");
+        var tbaClient = clientFactory.CreateClient("TBA");
         
         var response = await tbaClient.GetAsync($"api/v3/team/frc{teamID}/robots");
 
@@ -84,7 +78,7 @@ public class TeamModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("events", "Returns data about all the requested team's events in the requested year.")]
     public async Task TeamEventCommand([Summary("TeamNumber", "The team that you want data of.")] int teamID, [Summary("Year", "The year/season you want the information from (default: current season)")] int year = 2024)
     {
-        var tbaClient = _clientFactory.CreateClient("TBA");
+        var tbaClient = clientFactory.CreateClient("TBA");
         
         var response = await tbaClient.GetAsync($"api/v3/team/frc{teamID}/events/{year}/simple");
 

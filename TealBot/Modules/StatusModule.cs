@@ -1,21 +1,14 @@
 namespace TealBot.Modules;
 
 [Group("status", "Get API Status")]
-public class StatusModule : InteractionModuleBase<SocketInteractionContext>
+public class StatusModule(ILogger<StatusModule> logger, IHttpClientFactory clientFactory) : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly ILogger<StatusModule> _logger;
-    private readonly IHttpClientFactory _clientFactory;
+    private readonly ILogger<StatusModule> _logger = logger;
 
-    public StatusModule(ILogger<StatusModule> logger, IHttpClientFactory clientFactory)
-    {
-        _logger = logger;
-        _clientFactory = clientFactory;
-    }
-    
     [SlashCommand("bluealliance","Returns The Blue Alliance's API Status")]
     public async Task BlueAllianceStatusCommand()
     {
-        var tbaClient = _clientFactory.CreateClient("TBA");
+        var tbaClient = clientFactory.CreateClient("TBA");
 
         var response = await tbaClient.GetAsync($"api/v3/status");
 
@@ -26,9 +19,10 @@ public class StatusModule : InteractionModuleBase<SocketInteractionContext>
             dynamic? data = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
 
             embedBuilder = new EmbedBuilder()
-                .WithTitle($"**{(int)response.StatusCode} OK**")
-                .WithDescription("Is datafeed down? " + ((bool)data.is_datafeed_down ? "yes" : "no")
-                                                      + "\n\n" + $"Current Season: {(string)data.current_season}")
+                .WithTitle($"**Success {(int)response.StatusCode}**")
+                .WithDescription("The Blue Alliance's API appears to be up and running.\n\nIs datafeed down? " + ((bool)data.is_datafeed_down ? "yes" : "no")
+                    + "\n\n" + $"Current Season: {(string)data.current_season}")
+                .WithColor(0,0,255)
                 .WithCurrentTimestamp();
         }
         else
@@ -45,7 +39,7 @@ public class StatusModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("statbotics", "Returns Statbotics' API status")]
     public async Task StatboticsStatusCommand()
     {
-        var statClient = _clientFactory.CreateClient("statbotics");
+        var statClient = clientFactory.CreateClient("statbotics");
         
         var response = await statClient.GetAsync("v2");
 

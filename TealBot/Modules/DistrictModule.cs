@@ -4,21 +4,14 @@ using ILogger = Serilog.ILogger;
 namespace TealBot.Modules;
 
 [Group("district", "District-specific commands")]
-public class DistrictModule : InteractionModuleBase<SocketInteractionContext>
+public class DistrictModule(ILogger<DistrictModule> logger, IHttpClientFactory clientFactory) : InteractionModuleBase<SocketInteractionContext>
 {
-    private readonly ILogger<DistrictModule> _logger;
-    private readonly IHttpClientFactory _clientFactory;
+    private readonly ILogger<DistrictModule> _logger = logger;
 
-    public DistrictModule(ILogger<DistrictModule> logger, IHttpClientFactory clientFactory)
-    {
-        _logger = logger;
-        _clientFactory = clientFactory;
-    }
-    
     [SlashCommand("list", "Returns a list of all FRC districts participating in the specified season.")]
     public async Task DistrictsCommand([Summary("Year", "The year/season you want the information from (default: current season)")] int year = 2024)
     {
-        var tbaClient = _clientFactory.CreateClient("TBA");
+        var tbaClient = clientFactory.CreateClient("TBA");
         
         var response = await tbaClient.GetAsync($"api/v3/districts/{year}");
 
