@@ -12,6 +12,8 @@ using TealBot.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using System.Net.Http.Headers;
+
 using Serilog;
 using TealBot;
 
@@ -47,6 +49,19 @@ builder.Services.AddSingleton(x => new InteractionService(x.GetRequiredService<D
 builder.Services.AddSingleton<InteractionHandler>();
 
 builder.Services.AddHostedService<DiscordBotService>();
+
+builder.Services.AddHttpClient("TBA", c =>
+{
+    c.BaseAddress = new Uri("https://www.thebluealliance.com/");
+    c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    c.DefaultRequestHeaders.Add("X-TBA-Auth-Key", builder.Configuration["Secrets:TBA"]);
+});
+
+builder.Services.AddHttpClient("statbotics", c =>
+{
+    c.BaseAddress = new Uri("https://api.statbotics.io/");
+    c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+});
 
 var app = builder.Build();
 

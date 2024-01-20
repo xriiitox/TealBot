@@ -1,4 +1,5 @@
 using TealBot.Objects;
+using ILogger = Serilog.ILogger;
 
 namespace TealBot.Modules;
 
@@ -6,24 +7,28 @@ namespace TealBot.Modules;
 public class DistrictModule : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly ILogger<DistrictModule> _logger;
+    private readonly IHttpClientFactory _clientFactory;
 
-    public DistrictModule(ILogger<DistrictModule> logger)
+    public DistrictModule(ILogger<DistrictModule> logger, IHttpClientFactory clientFactory)
     {
         _logger = logger;
+        _clientFactory = clientFactory;
     }
     
-    [SlashCommand("districts", "Returns a list of all FRC districts participating in the specified season.")]
+    [SlashCommand("list", "Returns a list of all FRC districts participating in the specified season.")]
     public async Task DistrictsCommand([Summary("Year", "The year/season you want the information from (default: current season)")] int year = 2024)
     {
-        var response = CommandHelper.tbaClient.GetAsync($"api/v3/districts/{year}");
+        var tbaClient = _clientFactory.CreateClient("TBA");
+        
+        var response = await tbaClient.GetAsync($"api/v3/districts/{year}");
 
         EmbedBuilder embedBuilder;
 
         string stuffString = "";
 
-        if (response.Result.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode)
         {
-            District[]? disArray = JsonConvert.DeserializeObject<District[]>(await response.Result.Content.ReadAsStringAsync());
+            District[]? disArray = JsonConvert.DeserializeObject<District[]>(await response.Content.ReadAsStringAsync());
 
             foreach (District d in disArray)
             {
@@ -39,7 +44,7 @@ public class DistrictModule : InteractionModuleBase<SocketInteractionContext>
         else
         {
             embedBuilder = new EmbedBuilder()
-                .WithDescription($"Error: The Blue Alliance returned a failing status code.\n\n{response.Result.StatusCode}")
+                .WithDescription($"Error: The Blue Alliance returned a failing status code.\n\n{(int)response.StatusCode}")
                 .WithCurrentTimestamp();
         }
 
