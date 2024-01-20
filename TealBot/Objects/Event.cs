@@ -1,4 +1,4 @@
-namespace TealBot;
+namespace TealBot.Objects;
 
 public class Event
 {

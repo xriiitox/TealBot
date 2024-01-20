@@ -1,4 +1,4 @@
-namespace TealBot;
+namespace TealBot.Objects;
 
 public class TeamRobot(string key, string robot_name, string team_key, int year)
 {
