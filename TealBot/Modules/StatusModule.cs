@@ -63,4 +63,15 @@ public class StatusModule(ILogger<StatusModule> logger, IHttpClientFactory clien
 
         await RespondAsync(embed: responseEmbed.Build());
     }
+
+    [SlashCommand("help", "Status help")]
+    public async Task StatusHelpCommand()
+    {
+        await RespondAsync(embed: new EmbedBuilder()
+            .WithTitle("**Status Help**")
+            .WithDescription("These commands are pretty self-explanatory.\n``/status statbotics`` will return the status of Statbotics' API.\n``/status bluealliance`` will return the status of The Blue Alliance's API.")
+            .WithColor(0,0,255)
+            .WithCurrentTimestamp()
+            .Build());
+    }
 }

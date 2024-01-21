@@ -1,16 +1,15 @@
 // Possible TODO: make teamevents have a selectmenu to select an event to view data of
 // TODO: Statbotics.io api for match data
 using TealBot.Objects;
-using ILogger = Serilog.ILogger;
 
 namespace TealBot.Modules;
 
 [Group("team", "Team-specific commands")]
-public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFactory) : InteractionModuleBase<SocketInteractionContext>
+public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFactory, InteractionService interactionService) : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly ILogger<TeamModule> _logger = logger;
 
-    [SlashCommand("get", "Returns data about the requested team.", ignoreGroupNames: true)]
+    [SlashCommand("get", "Retrieves data about the requested team.")]
     public async Task TeamCommand([Summary("TeamNumber", "The team that you want data of.")] int teamID)
     {
         HttpClient tbaClient = clientFactory.CreateClient("TBA");
@@ -75,7 +74,7 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
         await RespondAsync(embed: respondEmbed.Build());
     }
     
-    [SlashCommand("events", "Returns data about all the requested team's events in the requested year.")]
+    [SlashCommand("events", "Returns data about the requested team's events in the requested year.")]
     public async Task TeamEventCommand([Summary("TeamNumber", "The team that you want data of.")] int teamID, [Summary("Year", "The year/season you want the information from (default: current season)")] int year = 2024)
     {
         var tbaClient = clientFactory.CreateClient("TBA");
@@ -112,5 +111,42 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
         }
         
         
+    }
+
+    [SlashCommand("help", "Team command specific help")]
+    public async Task TeamHelpCommand()
+    {
+        var commandString = "";
+        var module =
+            interactionService.Modules.FirstOrDefault(m => m.SlashGroupName.Equals("team"));
+
+        EmbedBuilder embedBuilder;
+
+        if (module != null)
+        {
+            var commands = module.SlashCommands;
+            foreach (var command in commands)
+            {
+                var paramList = "";
+                foreach (var parameter in command.Parameters)
+                {
+                    paramList += parameter.ParameterType.Name + " " + parameter.Name + " ";
+                }
+
+                commandString += "Command " + command.Name + (paramList != "" ? " with parameters " : "") + paramList + "\n" + command.Description + "\n\n";
+            }
+            embedBuilder = new EmbedBuilder()
+                .WithTitle($"**Commands in module ``{module.SlashGroupName}``**")
+                .WithDescription(commandString)
+                .WithColor(0, 0, 255)
+                .WithCurrentTimestamp();
+            
+            await RespondAsync(embed: embedBuilder.Build());
+        }
+        else
+        {
+            await RespondAsync(
+                "Something has gone wrong, and the module cannot be found.\nPlease contact the bot's developer.");
+        }
     }
 }
