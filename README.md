@@ -7,7 +7,7 @@ Very WIP for now, feel free to make a PR!
 
 ## Self-Host
 
-Download archive for your system from releases and extract to a safe place on your system
+Clone repo and run in your IDE or with ``dotnet run``
 
 Replace fields "Discord" and "TBA" in the appsettings.json with your Discord bot token and your Blue Alliance API key respectively
 
@@ -23,3 +23,5 @@ idk man just make a PR or an issue and ill probably look at it
 * [Discord.NET](https://discordnet.dev)
 * [The Blue Alliance](https://www.thebluealliance.com/)
 * [Statbotics](https://www.statbotics.io/)
+* [FRCTools](https://frctools.com/)
+* [Grahamsh rules-search](https://search.grahamsh.com/search)

@@ -1,7 +1,6 @@
 
 namespace TealBot.Modules;
 
-[Group("helpgroup", "Command-help commands")]
 public class HelpModule(ILogger<HelpModule> logger, InteractionService interactions) : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly ILogger<HelpModule> _logger = logger;
@@ -13,13 +12,13 @@ public class HelpModule(ILogger<HelpModule> logger, InteractionService interacti
 
         foreach (var module in interactions.Modules)
         {
-            if (module.SlashGroupName != "helpgroup")
+            if (module.SlashGroupName != null)
             {
                 modules += module.SlashGroupName + "\n";
             }
-
-            
         }
+
+        modules += "rules";
         
         await RespondAsync(embed: new EmbedBuilder()
             .WithTitle("**General Command Help**")

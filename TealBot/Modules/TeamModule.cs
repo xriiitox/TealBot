@@ -10,11 +10,11 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
     private readonly ILogger<TeamModule> _logger = logger;
 
     [SlashCommand("get", "Retrieves data about the requested team.")]
-    public async Task TeamCommand([Summary("TeamNumber", "The team that you want data of.")] int teamID)
+    public async Task TeamCommand([Summary("TeamNumber", "The team that you want data of.")] int teamId)
     {
         HttpClient tbaClient = clientFactory.CreateClient("TBA");
 
-        var response = await tbaClient.GetAsync($"api/v3/team/frc{teamID}/simple");
+        var response = await tbaClient.GetAsync($"api/v3/team/frc{teamId}/simple");
 
         EmbedBuilder respondEmbed;
 
@@ -40,11 +40,11 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
     }
     
     [SlashCommand("robots", "Returns data about the requested team's robots.")]
-    public async Task TeamRobotsCommand([Summary("TeamNumber", "The team that you want data of.")] int teamID)
+    public async Task TeamRobotsCommand([Summary("TeamNumber", "The team that you want data of.")] int teamId)
     {
         var tbaClient = clientFactory.CreateClient("TBA");
         
-        var response = await tbaClient.GetAsync($"api/v3/team/frc{teamID}/robots");
+        var response = await tbaClient.GetAsync($"api/v3/team/frc{teamId}/robots");
 
         EmbedBuilder respondEmbed;
         
@@ -60,7 +60,7 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
                 
             respondEmbed = new EmbedBuilder()
                 .WithColor(0, 0, 255)
-                .WithTitle($"**Team {teamID}**")
+                .WithTitle($"**Team {teamId}**")
                 .WithDescription(teamRobots)
                 .WithCurrentTimestamp();
         }
@@ -75,11 +75,11 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
     }
     
     [SlashCommand("events", "Returns data about the requested team's events in the requested year.")]
-    public async Task TeamEventCommand([Summary("TeamNumber", "The team that you want data of.")] int teamID, [Summary("Year", "The year/season you want the information from (default: current season)")] int year = 2024)
+    public async Task TeamEventCommand([Summary("TeamNumber", "The team that you want data of.")] int teamId, [Summary("Year", "The year/season you want the information from (default: current season)")] int year = 2024)
     {
         var tbaClient = clientFactory.CreateClient("TBA");
         
-        var response = await tbaClient.GetAsync($"api/v3/team/frc{teamID}/events/{year}/simple");
+        var response = await tbaClient.GetAsync($"api/v3/team/frc{teamId}/events/{year}/simple");
 
         EmbedBuilder respondEmbed;
 
@@ -95,7 +95,7 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
 
             respondEmbed = new EmbedBuilder()
                 .WithColor(0, 0, 255)
-                .WithTitle($"**Events for Team {teamID} in the {year} season**")
+                .WithTitle($"**Events for Team {teamId} in the {year} season**")
                 .WithDescription(teamEventsData)
                 .WithCurrentTimestamp();
 

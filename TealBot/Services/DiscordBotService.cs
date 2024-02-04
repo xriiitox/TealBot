@@ -10,7 +10,7 @@ public class DiscordBotService(DiscordSocketClient client, InteractionService in
     protected override Task ExecuteAsync(CancellationToken cancellationToken)
     {
         client.Ready += ClientReady;
-
+        
         client.Log += LogAsync;
         interactions.Log += LogAsync;
         

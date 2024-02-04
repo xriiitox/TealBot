@@ -15,7 +15,6 @@ using Microsoft.Extensions.Hosting;
 using System.Net.Http.Headers;
 
 using Serilog;
-using TealBot;
 
 
 var builder = new HostApplicationBuilder(args);
@@ -62,6 +61,8 @@ builder.Services.AddHttpClient("statbotics", c =>
     c.BaseAddress = new Uri("https://api.statbotics.io/");
     c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
+
+
 
 var app = builder.Build();
 
