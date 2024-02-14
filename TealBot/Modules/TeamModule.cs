@@ -1,5 +1,6 @@
-// Possible TODO: make teamevents have a selectmenu to select an event to view data of
 // TODO: Statbotics.io api for match data
+
+using System.Threading.Channels;
 using TealBot.Objects;
 
 namespace TealBot.Modules;
@@ -8,6 +9,8 @@ namespace TealBot.Modules;
 public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFactory, InteractionService interactionService) : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly ILogger<TeamModule> _logger = logger;
+
+    private static Dictionary<string, Embed> embedList = new();
 
     [SlashCommand("get", "Retrieves data about the requested team.")]
     public async Task TeamCommand([Summary("TeamNumber", "The team that you want data of.")] int teamId)
@@ -85,21 +88,23 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
 
         if (response.IsSuccessStatusCode)
         {
-            string teamEventsData = "";
-            var listThing = JsonConvert.DeserializeObject<Event[]>(await response.Content.ReadAsStringAsync());
+            var eventList = JsonConvert.DeserializeObject<Event[]>(await response.Content.ReadAsStringAsync());
 
-            foreach (Event e in listThing)
+            var menuBuilder = new SelectMenuBuilder()
+                .WithPlaceholder("Select an event...")
+                .WithCustomId("team-events-menu")
+                .WithMinValues(1)
+                .WithMaxValues(1);
+            
+            foreach (Event e in eventList)
             {
-                teamEventsData += $"Key: {e.key}\nName: {e.name}\nDate: {e.start_date} to {e.end_date}\n\n";
+                menuBuilder.AddOption(e.name, e.key);
             }
 
-            respondEmbed = new EmbedBuilder()
-                .WithColor(0, 0, 255)
-                .WithTitle($"**Events for Team {teamId} in the {year} season**")
-                .WithDescription(teamEventsData)
-                .WithCurrentTimestamp();
+            var builder = new ComponentBuilder()
+                .WithSelectMenu(menuBuilder);
 
-            await RespondAsync(embed: respondEmbed.Build());
+            await RespondAsync($"**Events for team {teamId} in {year}:**", components: builder.Build());
         }
         else
         {
@@ -111,6 +116,103 @@ public class TeamModule(ILogger<TeamModule> logger, IHttpClientFactory clientFac
         }
         
         
+    }
+
+    [ComponentInteraction("team-events-menu", ignoreGroupNames: true)]
+    public async Task EventsMenu(string id, string[] selectedEvents)
+    {
+        await Context.Interaction.DeferAsync(true);
+        
+        var client = clientFactory.CreateClient("TBA");
+
+        var response = await client.GetAsync($"api/v3/event/{selectedEvents[0]}/matches/simple");
+        
+        var matchList = JsonConvert.DeserializeObject<dynamic[]>(await response.Content.ReadAsStringAsync());
+        
+        var menuBuilder = new SelectMenuBuilder()
+            .WithPlaceholder("Select a match...")
+            .WithCustomId("match-select-menu")
+            .WithMinValues(1)
+            .WithMaxValues(1);
+
+        foreach (dynamic match in matchList)
+        {
+            if (menuBuilder.Options.Count == 25)
+            {
+                break;
+            } 
+            var name = "";
+            switch ((string)match["comp_level"])
+            {
+                case "qm":
+                    name += "Qualifier Match " + match["match_number"] + (match["set_number"] > 1 ? "Set " + match["set_number"] : "");
+                    break;
+                case "sf":
+                    name += "Semifinals Match " + match["match_number"] + (match["set_number"] > 1 ? "Set " + match["set_number"] : "");
+                    break;
+                case "f":
+                    name += "Finals Match " + match["match_number"] + (match["set_number"] > 1 ? "Set " + match["set_number"] : "");
+                    break;
+            }
+
+            menuBuilder.AddOption(name, (string)match["key"]);
+        }
+
+        var builder = new ComponentBuilder()
+            .WithSelectMenu(menuBuilder);
+
+        var interaction = await Context.Interaction.GetOriginalResponseAsync();
+        
+        await interaction.ModifyAsync(x =>
+        {
+            x.Embed = null; 
+            x.Components = builder.Build(); // add new select menu
+            x.Content = "Which Match?"; 
+        });
+    }
+
+    [ComponentInteraction("match-select-menu", ignoreGroupNames: true)]
+    public async Task MatchSelectMenu(string id, string[] selectedMatch)
+    {
+        await Context.Interaction.DeferAsync(true);
+        
+        var client = clientFactory.CreateClient("TBA");
+
+        var response = await client.GetAsync($"api/v3/match/{selectedMatch[0]}/simple");
+
+        dynamic match = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
+
+        var embedBuilder = new EmbedBuilder()
+            .WithColor(0, 0, 255)
+            .WithTitle($"**{id} at event {(string)match["event_key"]}**")
+            .WithCurrentTimestamp();
+        var descString = "Teams on the blue alliance: \n";
+        // good lord this is ugly
+        foreach (string alliance in new []{"blue", "red"})
+        {
+            foreach (string team in match["alliances"][alliance]["team_keys"])
+            {
+                descString += "Team " + string.Concat(team.Where(Char.IsDigit)) + "\n";
+            }
+
+            descString += alliance.Equals("blue") ? "\nTeams on the red alliance: \n" : "";
+        }
+
+        descString += $"\nBlue Points: {(string)match["alliances"]["blue"]["score"]}";
+        descString += $"\nRed Points: {(string)match["alliances"]["red"]["score"]}\n";
+        descString += $"\nWinner: {(string)match["winning_alliance"]}";
+
+        embedBuilder.WithDescription(descString);
+        
+        var interaction = await Context.Interaction.GetOriginalResponseAsync();
+        
+        await interaction.ModifyAsync(x =>
+        {
+            x.Embed = embedBuilder.Build(); // create embed with match data
+            x.Components = null;
+            x.Content = null; 
+        });
+
     }
 
     [SlashCommand("help", "Team command specific help")]

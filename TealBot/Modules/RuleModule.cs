@@ -9,6 +9,8 @@ public class RuleModule(ILogger<RuleModule> logger, IHttpClientFactory clientFac
 {
     private static Dictionary<string, Embed> embedList = new();
     
+    
+    // i basically stole most of the code for this command from the FRC Discord's Dozer bot. 
     [SlashCommand("rule", "Displays the text of a given rule number or description.", ignoreGroupNames: true)]
     public async Task RuleCommand([Summary("text", "Rule number or description of rule")] string text)
     {
@@ -36,7 +38,7 @@ public class RuleModule(ILogger<RuleModule> logger, IHttpClientFactory clientFac
                         .WithUrl($"https://frctools.com/{year}/rule/{letter.ToUpper()}{number}")
                         .WithTitle("Rule " + letter.ToUpper() + number)
                         .WithColor(0, 0, 255)
-                        .WithDescription("```" + (string)rule["textContent"] + "```")
+                        .WithDescription("```" + ((string)rule["textContent"]).Replace("\n", " ") + "```")
                         .WithCurrentTimestamp();
 
                     await RespondAsync(embed: embedBuilder.Build());
@@ -77,7 +79,7 @@ public class RuleModule(ILogger<RuleModule> logger, IHttpClientFactory clientFac
                     embedList.Add("rule-" + (string)rule["text"], new EmbedBuilder()
                         .WithUrl($"https://frctools.com/{year}/rule/{rule["text"]}")
                         .WithTitle("Rule " + (string)rule["text"])
-                        .WithDescription("```" + (string)rule["textContent"] + "```")
+                        .WithDescription("```" + ((string)rule["textContent"]).Replace("\n"," ") + "```")
                         .WithColor(0, 0, 255)
                         .WithCurrentTimestamp()
                         .Build());
@@ -121,9 +123,9 @@ public class RuleModule(ILogger<RuleModule> logger, IHttpClientFactory clientFac
         
         await interaction.ModifyAsync(x =>
         {
-            x.Embed = embedList[selectedRules[0]];
-            x.Components = null;
-            x.Content = null;
+            x.Embed = embedList[selectedRules[0]]; // get selected rule from menu as message content
+            x.Components = null; // remove select menu
+            x.Content = null; // remove text from message
         });
     }
 }
